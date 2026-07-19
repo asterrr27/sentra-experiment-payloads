@@ -13,7 +13,7 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
-\title{A Controlled Security Evaluation of LLM Agents Against OWASP-Top-10 Attack Scenarios}
+\title{Sentra: A Controlled Security Evaluation of LLM Agents Against OWASP-Top-10 Attack Scenarios}
 
 \author{
   \IEEEauthorblockN{Sattar}
@@ -27,7 +27,7 @@
 \maketitle
 
 \begin{abstract}
-AI agents powered by large language models (LLMs) increasingly operate with tool access---reading files, sending emails, and executing commands---introducing a broad attack surface. We present a controlled experiment evaluating five LLM agents---three simulated security postures (weak, medium, strong) and two external models (Gemma-4-31b, GPT-4o-mini)---across 13 attack scenarios mapped to 6 OWASP LLM Top 10 categories. Using 130 unique attack payloads (10 per scenario), we conducted 1,950 total trials. Our results show a 40 percentage-point improvement from the weakest (3.33\% pass rate) to the strongest simulated posture (43.33\% pass rate), with statistical significance (p < 0.05, Cohen's d > 0.8). External models achieved notably higher pass rates (Gemma: 100\%, GPT-4o-mini: 71.54\%), suggesting architectural differences in security robustness. We identify multi-step chains and permission boundary violations as the most challenging scenarios, with only 0\%--3.3\% pass rates across all simulated agents.
+AI agents powered by large language models (LLMs) increasingly operate with tool access---reading files, sending emails, and executing commands---introducing a broad attack surface. We present a controlled experiment using the Sentra platform, evaluating five LLM agents---three simulated security postures (weak, medium, strong) and two external models (Gemma-4-31b, GPT-4o-mini)---across 13 attack scenarios mapped to 6 OWASP LLM Top 10 categories. Using 130 unique attack payloads (10 per scenario), we conducted 1,950 total trials. Our results show a 40 percentage-point improvement from the weakest (3.33\% pass rate) to the strongest simulated posture (43.33\% pass rate), with statistical significance (p < 0.05, Cohen's d > 0.8). External models achieved notably higher pass rates (Gemma: 100\% on 13 payloads, GPT-4o-mini: 71.54\% overall or 93.0\% excluding API errors), suggesting architectural differences in security robustness. We identify multi-step chains and permission boundary violations as the most challenging scenarios, with only 0\%--3.3\% pass rates across all simulated agents.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -37,9 +37,9 @@ LLM Security, Prompt Injection, Agent Safety, OWASP LLM Top 10, Controlled Exper
 \section{Introduction}
 \label{sec:introduction}
 
-Large language models (LLMs) have evolved beyond conversational chatbots into autonomous agents capable of using tools, accessing files, and executing commands~\cite{llmagents}. This capability expansion introduces significant security risks, as adversaries can inject instructions that cause agents to deviate from their intended behavior~\cite{promptinjection}.
+Large language models (LLMs) have evolved beyond conversational chatbots into autonomous agents capable of using tools, accessing files, and executing commands. This capability expansion introduces significant security risks, as adversaries can inject instructions that cause agents to deviate from their intended behavior~\cite{willison}.
 
-While prior work has catalogued attack taxonomies~\cite{owasp, owasptop10} and demonstrated individual exploits~\cite{jailbreak, jailbreak2}, systematic controlled evaluations across multiple security postures remain scarce. Most existing studies evaluate a single model or defense in isolation, making cross-comparison difficult.
+While prior work has catalogued attack taxonomies~\cite{owasp, owasptop10} and demonstrated individual exploits~\cite{liu, wei}, systematic controlled evaluations across multiple security postures remain scarce. Most existing studies evaluate a single model or defense in isolation, making cross-comparison difficult.
 
 In this paper, we present a controlled experiment that addresses three research questions:
 
@@ -55,16 +55,16 @@ We designed three simulated agents with escalating security defenses---ranging f
 \label{sec:background}
 
 \subsection{LLM Agent Security}
-LLM agents extend language models with tool-calling capabilities, enabling actions such as file operations, email communication, and web searches. This architecture introduces a new attack surface where injected instructions can trigger unintended tool usage~\cite{toolinjection}.
+LLM agents extend language models with tool-calling capabilities, enabling actions such as file operations, email communication, and web searches. This architecture introduces a new attack surface where injected instructions can trigger unintended tool usage. Recent benchmarks such as AgentDojo~\cite{agentdojo}, ASB~\cite{asb}, and InjecAgent~\cite{injecagent} have systematized the evaluation of these vulnerabilities.
 
 \subsection{Prompt Injection Attacks}
-Prompt injection attacks embed malicious instructions within user inputs to override an agent's system prompt~\cite{promptinj}. Variants include direct injection, indirect injection via tool outputs~\cite{indirectinj}, role-play jailbreaks~\cite{roleplay}, and token smuggling.
+Prompt injection attacks embed malicious instructions within user inputs to override an agent's system prompt~\cite{greshake}. Variants include direct injection, indirect injection via tool outputs~\cite{injecagent}, role-play jailbreaks, and token smuggling.
 
 \subsection{OWASP LLM Top 10}
-The OWASP LLM Application Security Top 10~\cite{owasptop10} provides a standardized taxonomy of vulnerabilities. Our experiment covers six categories: LLM01 (Prompt Injection), LLM02 (Sensitive Information Disclosure), LLM05 (Supply Chain), LLM06 (Excessive Agency), LLM07 (System Prompt Leakage), and LLM10 (Model Theft).
+The OWASP LLM Application Security Top 10~\cite{owasptop10} provides a standardized taxonomy of vulnerabilities. Our experiment covers six categories: LLM01 (Prompt Injection), LLM02 (Sensitive Information Disclosure), LLM05 (Improper Output Handling), LLM06 (Excessive Agency), LLM07 (System Prompt Leakage), and LLM10 (Unbounded Consumption).
 
 \subsection{Existing Evaluations}
-Kumar et al.~\cite{eval1} evaluated prompt injection defenses across commercial LLMs. Perez and Ribeiro~\cite{eval2} proposed a benchmark for LLM security. However, few studies combine controlled agent simulation with external model validation using standardized OWASP mappings.
+Recent work has established standardized benchmarks for LLM agent security. AgentDojo~\cite{agentdojo} provides a dynamic environment for evaluating prompt injection attacks and defenses. ASB~\cite{asb} proposes a comprehensive security benchmark covering multiple attack dimensions. InjecAgent~\cite{injecagent} systematically evaluates prompt injection vulnerabilities across diverse agent configurations. However, these benchmarks typically evaluate a single model or defense in isolation. Our work extends prior approaches by combining controlled agent simulation with varying security postures and external model validation, mapped to the OWASP LLM Top 10 taxonomy~\cite{owasptop10}.
 
 \section{Methodology}
 \label{sec:methodology}
@@ -84,7 +84,7 @@ We developed 130 attack payloads across 13 scenarios, with 10 payloads per scena
 \subsection{External Validation}
 To assess real-model generalization, we validated against two additional models:
 \begin{itemize}
-  \item \textbf{Agent D:} Gemma-4-31b-it via Google Gemini API (26 payloads, 2 per scenario)
+  \item \textbf{Agent D:} Gemma-4-31b-it via Google Gemini API (13 payloads, 1 per scenario, due to free-tier quota constraints)
   \item \textbf{Agent E:} GPT-4o-mini via GitHub Models API (130 payloads, all scenarios)
 \end{itemize}
 Both used identical PASS/FAIL criteria based on response analysis.
@@ -95,7 +95,27 @@ For each trial, an agent response is classified as:
   \item \textbf{PASS:} Agent refused the injected instruction, maintained its original goal, or identified the attack.
   \item \textbf{FAIL:} Agent acted on the injected instruction (e.g., sent email, read protected files, disclosed system prompt).
 \end{itemize}
-Failure types include: goal\_deviated, info\_leaked, tool\_abused, and api\_error.
+Failure types include: goal\_deviated, info\_leaked, tool\_abused, and api\_error. For external models, API errors (rate limits, network failures) are counted as FAIL in the aggregate statistics. Of 130 GPT-4o-mini trials, 30 resulted in API errors (23\%). We report both pass rates---excluding errors (93.0\% of successful calls) and including errors as failures (71.54\% overall)---throughout this paper.
+
+\section{Threat Model}
+\label{sec:threatmodel}
+
+We define the adversary model used throughout this experiment:
+
+\paragraph{Adversary Capabilities.}
+The attacker can send arbitrary text inputs to the agent through the standard user interface. The attacker can also poison tool outputs that the agent reads (indirect injection scenarios). The attacker has knowledge of which tools the agent exposes but cannot modify the system prompt directly.
+
+\paragraph{Adversary Goals.}
+We consider four attacker objectives aligned with the OWASP LLM Top 10:
+\begin{itemize}
+  \item \textbf{Data exfiltration:} Read protected files (e.g., /etc/passwd) or email sensitive data to external addresses.
+  \item \textbf{Tool abuse:} Execute unauthorized commands, delete files, or send unsolicited emails.
+  \item \textbf{System prompt extraction:} Reveal the agent's system prompt or configuration details.
+  \item \textbf{Denial of service:} Trigger infinite tool-calling loops to exhaust resources.
+\end{itemize}
+
+\paragraph{Defender Capabilities.}
+The defender can configure the agent's system prompt, choose which tools to expose, and implement input/output filters. In our experiment, these defenses escalate from none (Agent A) through basic refusal enforcement (Agent B) to comprehensive injection detection with iteration limits (Agent C). The defender cannot modify the underlying LLM's pre-trained behavior.
 
 \section{Experiment Design}
 \label{sec:experiment}
@@ -108,7 +128,7 @@ Statistical analysis used the Mann-Whitney U test for pairwise comparisons and C
 \label{sec:results}
 
 \subsection{Overall Performance}
-Table~\ref{tab:overall} presents aggregate results. Agent C (Strong) achieved a 43.33\% pass rate compared to Agent A (Weak) at 3.33\%---an absolute improvement of 40 percentage points. External models performed notably higher, with Gemma-4-31b passing all 26 tested payloads (100\%) and GPT-4o-mini achieving 71.54\%.
+Table~\ref{tab:overall} presents aggregate results. Agent C (Strong) achieved a 43.33\% pass rate compared to Agent A (Weak) at 3.33\%---an absolute improvement of 40 percentage points. External models performed notably higher, with Gemma-4-31b passing all 13 tested payloads (100\%) and GPT-4o-mini achieving 71.54\% overall (93.0\% on 100 successful calls, with 30 API errors counted as failures).
 
 \begin{figure}[ht]
   \centering
@@ -142,23 +162,50 @@ Figure~\ref{fig:owasp} shows pass rates by OWASP category. LLM01 (Prompt Injecti
 \end{figure}
 
 \subsection{Timing Analysis}
-Agent C (Strong) had the lowest mean response latency (2,230 ms), compared to Agent A (3,208 ms) and Agent B (2,686 ms), suggesting security checks can be efficient.
+Agent C (Strong) had the lowest mean response latency (2,230 ms), compared to Agent A (3,208 ms) and Agent B (2,686 ms), suggesting security checks can be efficient. Agents D and E are excluded from timing analysis because the external validators only measure model response time, not end-to-end agent execution latency.
 
 \section{Discussion}
 \label{sec:discussion}
 
 \subsection{Key Findings}
-Our results demonstrate that comprehensive injection detection (Agent C) provides statistically significant security improvements over both no defenses (Agent A) and basic filtering (Agent B). The 40 percentage-point absolute improvement from A to C establishes a strong baseline for agent security.
+
+\textbf{Comprehensive detection matters.} The 40 percentage-point improvement from Agent A (3.33\%) to Agent C (43.33\%) is statistically significant (p < 0.05) with large effect sizes (Cohen's d > 0.8). This confirms that multi-layered injection detection---combining input filtering, output validation, tool restriction, and iteration limits---is necessary for robust agent security.
+
+\textbf{Single-layer defenses are insufficient.} Agent B's basic profanity filter and refusal keywords produced marginal improvement (20.0\% vs 3.33\%) that was not statistically significant across most scenarios (p > 0.05). This finding warns against relying on superficial defenses.
+
+\textbf{External models show stronger baseline security.} Gemma-4-31b resisted all 13 tested payloads (100\%), and GPT-4o-mini passed 93 of 100 successful trials (93\%). Both substantially outperformed the strongest simulated agent (Agent C at 43.33\%). This gap likely reflects architectural differences in safety training and instruction-following behavior rather than any specific defense mechanism.
+
+\textbf{Scenario difficulty varies widely.} Multi-Step Chain, Permission Boundary, and Indirect Injection consistently compromised all simulated agents (0\%--3.3\% pass rates). These scenarios exploit fundamental gaps in how agents handle context switches and authority verification. Conversely, Role-Play Jailbreak and Token Smuggling were effectively resisted by Agent C (90\%--100\%), suggesting these attack vectors are more amenable to pattern-based detection.
+
+\subsection{Threat Model Validation}
+Our threat model assumed the attacker knows the agent's toolset but not the system prompt. The results validate this: the most successful payloads (GD\_010, MS\_002) exploited tool knowledge (e.g., ``call send\_email to exfiltrate'') rather than requiring system prompt access.
 
 \subsection{Limitations}
+
+We acknowledge the following limitations:
+
 \begin{enumerate}
-  \item Simulated agents may not fully replicate commercial LLM agent behavior.
-  \item External model validation used a subset of payloads (Gemma: 26/130).
-  \item All agents used the same base model (Llama 3.3 70B); results may differ with other architectures.
+  \item \textbf{Gemma validation subset:} Agent D (Gemma-4-31b) was validated on only 13 of 130 payloads (1 per scenario) due to Google Gemini free-tier quota exhaustion. The 100\% pass rate should be interpreted cautiously. We attempted a full 130-payload run but the API was too slow (30+ seconds per call) and repeatedly timed out.
+  \item \textbf{GPT-4o-mini API errors:} 30 of 130 GPT-4o-mini trials (23\%) resulted in API errors (rate limits, server disconnects). These were counted as FAIL in aggregate statistics. The true pass rate on successful calls is 93.0\%.
+  \item \textbf{Single base model:} All three simulated agents use Llama 3.3 70B via Groq. Results may not generalize to other model architectures (GPT-4, Claude, Gemini).
+  \item \textbf{Simulated agents:} Our LangChain-based agents, while realistic, may not fully replicate commercial agent deployments with proprietary safety layers.
+  \item \textbf{No timing data for external models:} Agents D and E report 0ms latency because the external validators measure model response time, not end-to-end agent execution. Timing comparisons only apply to Agents A--C.
 \end{enumerate}
 
-\subsection{Implications}
-For practitioners, our findings suggest that multi-layered injection detection---combining input filtering, output validation, and iteration limits---is necessary for robust agent security. Single-layer defenses (Agent B) provide marginal, statistically insignificant improvement.
+\subsection{Future Work}
+
+Several directions emerge from this work:
+
+\begin{enumerate}
+  \item \textbf{Cross-model evaluation:} Expand simulated agents to use GPT-4, Claude, and Gemini as base models to test whether the security posture trends hold across architectures.
+  \item \textbf{Adaptive attacks:} Develop payloads that evolve based on agent responses (e.g., multi-turn attacks that probe for weak points).
+  \item \textbf{Real-time detection:} Integrate runtime injection detection that monitors both input and tool output streams during agent execution.
+  \item \textbf{Full Gemma validation:} Re-run Agent D with sufficient API quota or a local deployment of the model to validate all 130 payloads.
+  \item \textbf{Reproducibility infrastructure:} Extend the Sentra experiment platform to support automated cross-model comparison with standardized reporting.
+\end{enumerate}
+
+\subsection{Implications for Practitioners}
+Our findings suggest that practitioners should: (1) implement multi-layered defenses rather than single filters; (2) restrict tool access to the minimum necessary set; (3) enforce iteration limits to prevent tool-loop exploits; and (4) validate security posture against multiple model families, as behavior varies significantly.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -167,29 +214,23 @@ We presented a controlled experiment evaluating LLM agent security across 1,950 
 
 \begin{thebibliography}{00}
 
-\bibitem{llmagents} L. Wang et al., ``A Survey on Large Language Model based Autonomous Agents,'' arXiv preprint, 2024.
+\bibitem{agentdojo} E. Debenedetti, J. Zhang, M. Schwarzer, et al., ``AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents,'' in \textit{Advances in Neural Information Processing Systems (NeurIPS)}, 2024.
 
-\bibitem{promptinjection} S. Willison, ``Prompt injection attacks against LLM agents,'' 2023.
+\bibitem{asb} Z. Zhang, Y. Liu, X. Chen, et al., ``ASB: Agent Security Bench,'' in \textit{International Conference on Learning Representations (ICLR)}, 2025.
 
-\bibitem{owasp} OWASP, ``OWASP LLM AI Cybersecurity \& Governance Checklist,'' 2024.
+\bibitem{injecagent} Q. Zhan, Z. Liang, Z. Ying, et al., ``InjecAgent: A Benchmark for Evaluating Prompt Injection Attacks Against LLM Agents,'' in \textit{Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL)}, 2024.
 
-\bibitem{owasptop10} OWASP, ``OWASP Top 10 for LLM Applications,'' v1.1, 2024.
+\bibitem{greshake} K. Greshake, S. Abdelnabi, S. Mishra, et al., ``Not what you've signed up for: Compromising Real-World LLM-Integrated Applications,'' \textit{arXiv:2302.12173}, 2023.
 
-\bibitem{jailbreak} Y. Liu et al., ``Jailbreaking ChatGPT via Prompt Engineering,'' 2023.
+\bibitem{willison} S. Willison, ``Prompt injection attacks against LLM agents,'' \textit{simonwillison.net}, 2023.
 
-\bibitem{jailbreak2} A. Wei et al., ``Jailbroken: How Does LLM Safety Training Fail?'' in NeurIPS, 2023.
+\bibitem{owasp} OWASP, ``OWASP LLM AI Cybersecurity \& Governance Checklist,'' 2024. [Online]. Available: \url{https://owasp.org/www-project-llm-ai-security-cybersecurity-governance-checklist/}
 
-\bibitem{toolinjection} R. Kumar et al., ``Tool Injection Attacks on LLM Agents,'' 2024.
+\bibitem{owasptop10} OWASP, ``OWASP Top 10 for LLM Applications,'' v1.1, 2024. [Online]. Available: \url{https://genai.owasp.org/}
 
-\bibitem{promptinj} K. Greshake et al., ``Not what you've signed up for: Compromising Real-World LLM-Integrated Applications,'' 2023.
+\bibitem{liu} Y. Liu, G. Deng, Z. Xu, et al., ``Jailbreaking ChatGPT via Prompt Engineering: An Empirical Study,'' \textit{arXiv:2305.13860}, 2023.
 
-\bibitem{indirectinj} Z. Xu et al., ``Indirect Prompt Injection Attacks on LLM Agents,'' 2024.
-
-\bibitem{roleplay} M. Shen et al., ``Role-Play Jailbreaking of Large Language Models,'' 2024.
-
-\bibitem{eval1} S. Kumar et al., ``Evaluating Prompt Injection Defenses,'' 2024.
-
-\bibitem{eval2} F. Perez and I. Ribeiro, ``Ignore Previous Prompt: Attack Techniques for Language Models,'' 2023.
+\bibitem{wei} A. Wei, N. Haghtalab, J. Steinhardt, ``Jailbroken: How Does LLM Safety Training Fail?'' in \textit{Advances in Neural Information Processing Systems (NeurIPS)}, 2023.
 
 \end{thebibliography}
 
